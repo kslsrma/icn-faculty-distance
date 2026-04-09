@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICN Faculty Distance Calculator</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; color: #222; }
+  h1 { font-size: 1.4em; }
+  .campus { font-size: 0.85em; color: #666; margin-bottom: 20px; }
+  input { width: 100%; padding: 10px; font-size: 1em; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+  button { margin-top: 10px; padding: 10px 20px; font-size: 1em; background: #0063b1; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  button:disabled { background: #999; }
+  .results { margin-top: 25px; }
+  .row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+  .row strong { color: #0063b1; }
+  .resolved { margin-top: 15px; font-size: 0.85em; color: #666; font-style: italic; }
+  .error { color: #b00; margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<h1>ICN Faculty Distance Calculator</h1>
+<div class="campus">Straight-line distance from a faculty address to each ICN campus.</div>
+
+<input id="addr" type="text" placeholder="Postal code or full address (e.g. 54000 Nancy or 10 rue de Rivoli, Paris)" />
+<button id="go">Calculate</button>
+
+<div id="out"></div>
+
+<script>
+const CAMPUSES = [
+  { name: "Nancy",  addr: "2 Place de Padoue, 54000 Nancy",        lat: 48.6921, lon: 6.1844  },
+  { name: "Paris",  addr: "76 Route de la Demi-Lune, 92800 Puteaux", lat: 48.8785, lon: 2.2395 },
+  { name: "Berlin", addr: "Alt-Moabit 96, 10559 Berlin",             lat: 52.5255, lon: 13.3419 }
+];
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function geocode(q) {
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  const data = await res.json();
+  if (!data.length) throw new Error("Address not found. Try adding city or country.");
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display: data[0].display_name };
+}
+
+document.getElementById('go').addEventListener('click', async () => {
+  const q = document.getElementById('addr').value.trim();
+  const out = document.getElementById('out');
+  if (!q) { out.innerHTML = '<div class="error">Please enter an address or postal code.</div>'; return; }
+  const btn = document.getElementById('go');
+  btn.disabled = true; btn.textContent = 'Looking up...';
+  out.innerHTML = '';
+  try {
+    const loc = await geocode(q);
+    let html = '<div class="results">';
+    for (const c of CAMPUSES) {
+      const km = haversine(loc.lat, loc.lon, c.lat, c.lon);
+      html += `<div class="row"><span>${c.name}<br><small style="color:#888">${c.addr}</small></span><strong>${km.toFixed(1)} km</strong></div>`;
+    }
+    html += `</div><div class="resolved">Resolved to: ${loc.display}</div>`;
+    out.innerHTML = html;
+  } catch (e) {
+    out.innerHTML = `<div class="error">${e.message}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Calculate';
+  }
+});
+
+document.getElementById('addr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('go').click(); });
+</script>
+
+</body>
+</html>
