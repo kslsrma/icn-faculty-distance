@@ -9,11 +9,13 @@
   h1 { font-size: 1.4em; }
   .campus { font-size: 0.85em; color: #666; margin-bottom: 20px; }
   input { width: 100%; padding: 10px; font-size: 1em; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-  button { margin-top: 10px; padding: 10px 20px; font-size: 1em; background: #0063b1; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  button { margin-top: 10px; padding: 10px 20px; font-size: 1em; background: #FF6B21; color: white; border: none; border-radius: 4px; cursor: pointer; }
   button:disabled { background: #999; }
   .results { margin-top: 25px; }
-  .row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
-  .row strong { color: #0063b1; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #eee; }
+  .row img { width: 56px; height: 56px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+  .row .info { flex: 1; }
+  .row strong { color: #FF6B21; font-size: 1.1em; }
   .resolved { margin-top: 15px; font-size: 0.85em; color: #666; font-style: italic; }
   .error { color: #b00; margin-top: 15px; }
 </style>
@@ -30,9 +32,24 @@
 
 <script>
 const CAMPUSES = [
-  { name: "Nancy",  addr: "2 Place de Padoue, 54000 Nancy",        lat: 48.6921, lon: 6.1844  },
-  { name: "Paris",  addr: "76 Route de la Demi-Lune, 92800 Puteaux", lat: 48.8785, lon: 2.2395 },
-  { name: "Berlin", addr: "Alt-Moabit 96, 10559 Berlin",             lat: 52.5255, lon: 13.3419 }
+  {
+    name: "Nancy",
+    addr: "2 Place de Padoue, 54000 Nancy",
+    lat: 48.6921, lon: 6.1844,
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Place_Stanislas_%28Nancy%29_-_2.jpg/320px-Place_Stanislas_%28Nancy%29_-_2.jpg"
+  },
+  {
+    name: "Paris",
+    addr: "76 Route de la Demi-Lune, 92800 Puteaux",
+    lat: 48.8785, lon: 2.2395,
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg/240px-Tour_Eiffel_Wikimedia_Commons.jpg"
+  },
+  {
+    name: "Berlin",
+    addr: "Alt-Moabit 96, 10559 Berlin",
+    lat: 52.5255, lon: 13.3419,
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Brandenburger_Tor_abends.jpg/320px-Brandenburger_Tor_abends.jpg"
+  }
 ];
 
 function haversine(lat1, lon1, lat2, lon2) {
@@ -64,7 +81,7 @@ document.getElementById('go').addEventListener('click', async () => {
     let html = '<div class="results">';
     for (const c of CAMPUSES) {
       const km = haversine(loc.lat, loc.lon, c.lat, c.lon);
-      html += `<div class="row"><span>${c.name}<br><small style="color:#888">${c.addr}</small></span><strong>${km.toFixed(1)} km</strong></div>`;
+      html += `<div class="row"><img src="${c.img}" alt="${c.name}"><div class="info">${c.name}<br><small style="color:#888">${c.addr}</small></div><strong>${km.toFixed(1)} km</strong></div>`;
     }
     html += `</div><div class="resolved">Resolved to: ${loc.display}</div>`;
     out.innerHTML = html;
