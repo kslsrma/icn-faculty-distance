@@ -114,7 +114,9 @@ function haversine(lat1, lon1, lat2, lon2) {
 }
 
 async function geocode(q) {
-  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
+  const isBareZip = /^\d{4,5}$/.test(q.trim());
+  const cc = isBareZip ? '&countrycodes=fr,de' : '';
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1${cc}&q=${encodeURIComponent(q)}`;
   const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
   const data = await res.json();
   if (!data.length) throw new Error("Address not found. Try adding city or country.");
